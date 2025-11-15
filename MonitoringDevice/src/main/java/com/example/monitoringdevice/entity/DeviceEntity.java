@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "sd-monitoring")
+@Table(name = "sd-device")
 public class DeviceEntity {
 
     @Id
