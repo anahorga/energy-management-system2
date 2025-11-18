@@ -1,6 +1,7 @@
 package com.example.monitoringdevice.controller;
 
 import com.example.monitoringdevice.dto.DeviceDto;
+import com.example.monitoringdevice.dto.MonitoringRequestDto;
 import com.example.monitoringdevice.exceptions.DeviceNotFoundException;
 import com.example.monitoringdevice.service.MonitoringService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,18 @@ public class MonitoringController {
             monitoringService.deleteDevice(id);
             return ResponseEntity.ok().build();
         }catch(DeviceNotFoundException e){
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAll(@RequestBody MonitoringRequestDto dto)
+    {
+        try {
+            return ResponseEntity.ok(monitoringService.getAllByDeviceIdAndTimestamp(dto.getId(),dto.getDay()));
+        }catch(Exception e){
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));

@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -52,8 +54,10 @@ public class MonitoringListener {
 
             if (existing.isPresent()) {
                 MonitoringEntity found = existing.get();
-                found.setConsumption(found.getConsumption() + monitoringEntity.getConsumption());
-
+                Double aux = monitoringEntity.getConsumption();
+                aux += found.getConsumption();
+                aux = BigDecimal.valueOf(aux).setScale(2, RoundingMode.HALF_UP).doubleValue();
+                found.setConsumption(aux);
                 monitoringRepository.save(found);
 
             } else {

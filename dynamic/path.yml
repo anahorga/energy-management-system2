@@ -56,6 +56,16 @@ http:
       service: authentication-service
       middlewares:
         - cors-headers  # CORS și pentru auth service
+    
+    monitoring-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/monitoring`)"
+      entryPoints:
+        - web
+      service: monitoring-service
+      middlewares:
+        - cors-headers  # CORS primul!
+        - auth-fw       # Auth al doilea
+
     frontend-app:
       rule: "Host(`localhost`)" # <-- Prinde tot traficul rămas
       priority: 1 # <-- Prioritate mai mică
@@ -79,6 +89,12 @@ http:
       loadBalancer:
         servers:
           - url: "http://authenticationservice:8083"
+
+    monitoring-service:
+      loadBalancer:
+        servers:
+          - url: "http://monitoringdevice:8084"
+
     frontend-service:
       loadBalancer:
         servers:

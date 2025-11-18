@@ -11,6 +11,6 @@ import java.util.List;
 public interface MonitoringRepository  extends JpaRepository<MonitoringEntity,Long> {
      List<MonitoringEntity> findAllByDevice_Id(Long deviceId);
      MonitoringEntity findByDeviceIdAndTimestamp(Long deviceId, LocalDateTime timestamp);
-     List<MonitoringEntity> findByDeviceIdAndTimestampBetween(Long deviceId,LocalDateTime start, LocalDateTime end);
+     List<MonitoringEntity> findByDeviceIdAndTimestampBetweenOrderByTimestampAsc(Long deviceId,LocalDateTime start, LocalDateTime end);
 
 }

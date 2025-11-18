@@ -1,7 +1,9 @@
 package com.example.monitoringdevice.service;
 
 import com.example.monitoringdevice.dto.DeviceDto;
+import com.example.monitoringdevice.dto.MonitoringDto;
 import com.example.monitoringdevice.entity.DeviceEntity;
+import com.example.monitoringdevice.entity.MonitoringEntity;
 import com.example.monitoringdevice.exceptions.DeviceNotFoundException;
 import com.example.monitoringdevice.mapper.DeviceMapper;
 import com.example.monitoringdevice.mapper.MonitoringMapper;
@@ -11,6 +13,10 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,4 +44,21 @@ public class MonitoringService {
         }
         deviceRepository.deleteById(id);
     }
+    public List<MonitoringDto> getAllByDeviceIdAndTimestamp(Long id, LocalDate day)
+    {
+        if (!deviceRepository.existsById(id)) {
+            throw new DeviceNotFoundException("Device with id " + id + " not found");
+        }
+
+        LocalDateTime start = day.atStartOfDay();
+        LocalDateTime end = day.plusDays(1).atStartOfDay();
+
+        List<MonitoringEntity> monitoring=monitoringRepository.findByDeviceIdAndTimestampBetweenOrderByTimestampAsc(id,start,end);
+        if(monitoring.isEmpty())
+            throw new RuntimeException("No monitoring found for selected date");
+        else
+            return monitoringMapper.monitoringEntityToMonitoringDto(monitoring);
+
+    }
+
 }
