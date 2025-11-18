@@ -1,5 +1,3 @@
-// Modifică ems-frontend/src/pages/AdminDashboard.tsx
-
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createUserAsAdmin } from "../lib/adminProvision";
@@ -7,7 +5,7 @@ import type { UserRole } from "../types/auth";
 import MyDevices from "./MyDevices";
 import { UserList } from "./UserList";
 import { AllDevicesList } from "./AllDevicesList";
-import { api } from "../lib/api"; // <-- 1. Importă 'api'
+import { api } from "../lib/api";
 
 const roles: UserRole[] = ["USER", "ADMIN"];
 
@@ -150,7 +148,8 @@ export default function AdminDashboard() {
             {/* Device-urile mele (toggle) */}
             {showDevices && (
                 <div style={{ border: "1px solid #ddd", borderRadius: 8, marginBottom: 16, overflowX: 'auto' }}>
-                    <MyDevices />
+                    {/* Aici este modificarea: */}
+                    <MyDevices isVisible={showDevices} />
                 </div>
             )}
 

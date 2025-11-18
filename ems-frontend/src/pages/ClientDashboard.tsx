@@ -17,7 +17,7 @@ export default function ClientDashboard() {
             <hr style={{ margin: "16px 0" }} />
 
             {/* Lista de device-uri ale userului curent */}
-            <MyDevices />
+            <MyDevices isVisible={true} />
         </div>
     );
 }

@@ -1,15 +1,16 @@
 package com.example.monitoringdevice.controller;
 
 import com.example.monitoringdevice.dto.DeviceDto;
-import com.example.monitoringdevice.dto.MonitoringRequestDto;
 import com.example.monitoringdevice.exceptions.DeviceNotFoundException;
 import com.example.monitoringdevice.service.MonitoringService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -40,11 +41,14 @@ public class MonitoringController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAll(@RequestBody MonitoringRequestDto dto)
-    {
+    public ResponseEntity<?> getAll(
+            @RequestParam("deviceId") Long deviceId,
+            @RequestParam("day") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate day
+    ) {
         try {
-            return ResponseEntity.ok(monitoringService.getAllByDeviceIdAndTimestamp(dto.getId(),dto.getDay()));
-        }catch(Exception e){
+            // Trimitem parametrii direct la service
+            return ResponseEntity.ok(monitoringService.getAllByDeviceIdAndTimestamp(deviceId, day));
+        } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", e.getMessage()));

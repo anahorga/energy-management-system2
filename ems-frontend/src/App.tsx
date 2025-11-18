@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./routes/ProtectedRoute";
 import Login from "./pages/Login";
 import Admin from "./pages/AdminDashboard";
 import Client from "./pages/ClientDashboard";
+import { DeviceStatistics } from "./pages/DeviceStatistics";
 
 const HomeRedirect: React.FC = () => {
     const { role } = useAuth();
@@ -20,7 +21,17 @@ function AppInner(){
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<ProtectedRoute allow={["ADMIN"]}><Admin /></ProtectedRoute>} />
             <Route path="/client" element={<ProtectedRoute allow={["USER"]}><Client /></ProtectedRoute>} />
+            <Route
+                path="/statistics/:deviceId"
+                element={
+                    <ProtectedRoute allow={["ADMIN", "USER"]}>
+                        <DeviceStatistics />
+                    </ProtectedRoute>
+                }
+            />
+
             <Route path="/*" element={<HomeRedirect />} />
+
         </Routes>
     );
 }

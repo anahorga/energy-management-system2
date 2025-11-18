@@ -1,5 +1,3 @@
-// Modifică ems-frontend/src/pages/AllDevicesList.tsx
-
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import type { DeviceDto } from '../types/device';

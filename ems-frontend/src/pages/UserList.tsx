@@ -1,5 +1,3 @@
-// Modifică ems-frontend/src/pages/UserList.tsx
-
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import type { AuthUserDto } from '../types/auth';

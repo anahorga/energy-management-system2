@@ -42,8 +42,8 @@ public class ForwardAuthController {
 
         String method = headerOrDefault(req, "X-Forwarded-Method", req.getMethod());
         String uri    = headerOrDefault(req, "X-Forwarded-Uri",    req.getRequestURI());
-
-        boolean allowed = policy.isAllowed(method, uri, roles);
+        String path = uri.split("\\?")[0];
+        boolean allowed = policy.isAllowed(method, path, roles);
         if (!allowed) {
             res.sendError(HttpStatus.FORBIDDEN.value(), "Forbidden by policy");
             return;
