@@ -9,11 +9,13 @@ import com.example.deviceservice.exceptions.InvalidDeviceException;
 import com.example.deviceservice.exceptions.UserNotFoundException;
 import com.example.deviceservice.mapper.DeviceMapper;
 import com.example.deviceservice.mapper.UserMapper;
+import com.example.deviceservice.rabbit.RabbitMQConfig;
 import com.example.deviceservice.repository.DeviceRepository;
 import com.example.deviceservice.repository.UserRepository;
 import com.example.deviceservice.validator.DeviceValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ public class DeviceService {
         private  final UserRepository userRepository;
         private  final UserMapper userMapper;
         private  final DeviceValidator deviceValidator;
+        private final RabbitTemplate rabbitTemplate;
 
 
         public List<DeviceDto> findAll()
@@ -46,7 +49,16 @@ public class DeviceService {
                 if (!userRepository.existsById(deviceEntity.getUser().getId())) {
                         throw new UserNotFoundException("User with id " + deviceEntity.getUser().getId() + " not found");
                 }
-                return deviceMapper.deviceEntityToDeviceDto(deviceRepository.save(deviceEntity));
+
+                DeviceEntity savedDevice=deviceRepository.save(deviceEntity);
+
+                DeviceDto event=DeviceDto.builder()
+                        .id(savedDevice.getId())
+                        .build();
+
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "device.insert", event);
+
+                return deviceMapper.deviceEntityToDeviceDto(savedDevice);
         }
 
         public void deleteUser(Long id) {
@@ -102,6 +114,12 @@ public class DeviceService {
                 if (!deviceRepository.existsById(id)) {
                         throw new DeviceNotFoundException("Device with id " + id + " not found");
                 }
+                DeviceDto event=DeviceDto.builder()
+                        .id(id)
+                        .build();
+
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, "device.delete", event);
+
                 deviceRepository.deleteById(id);
         }
 
