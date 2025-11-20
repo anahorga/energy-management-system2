@@ -47,29 +47,21 @@ export const UserList: React.FC = () => {
     }, []);
 
     const handleDeleteUser = async (userId: number, username: string) => {
-        // ... (handleDeleteUser rămâne neschimbat)
         if (!window.confirm(`Are you sure you want to delete user '${username}' (ID: ${userId})? This will delete all associated data.`)) {
             return;
         }
         setDeleteErr(null);
         try {
-            const results = await Promise.allSettled([
-                api.delete(`/api/auth/${userId}`),
-                api.delete(`/api/users/${userId}`),
-                api.delete(`/api/devices/user/${userId}`)
-            ]);
-            const failed = results.filter(r => r.status === 'rejected');
-            if (failed.length > 0) {
-                console.error("Delete failed in some services:", failed);
-                throw new Error("User was partially deleted. Check console.");
-            }
+
+            await api.delete(`/api/auth/${userId}`);
+
             setUsers(currentUsers => currentUsers.filter(u => u.id !== userId));
         } catch (e: any) {
+            console.error("Delete failed:", e);
             setDeleteErr(e?.response?.data?.error || e?.message || "Delete failed");
         }
     };
 
-    // 3. Funcții pentru a gestiona modul de editare
     const handleEditClick = (user: CombinedUser) => {
         setEditingUserId(user.id);
         setEditFormData({

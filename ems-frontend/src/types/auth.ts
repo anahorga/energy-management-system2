@@ -14,7 +14,11 @@ export type UserRole = "ADMIN" | "USER";
 export type RegisterAdminRequest = {
     username: string;
     password: string;
-    userRole: UserRole; // doar ADMIN sau USER
+    userRole: UserRole;
+    firstName: string;
+    lastName: string;
+    address: string;
+    email: string;
 };
 
 export type AuthUserDto = {
