@@ -6,7 +6,7 @@ import Login from "./pages/Login";
 import Admin from "./pages/AdminDashboard";
 import Client from "./pages/ClientDashboard";
 import { DeviceStatistics } from "./pages/DeviceStatistics";
-
+import Register from "./pages/Register";
 const HomeRedirect: React.FC = () => {
     const { role } = useAuth();
     const target = useMemo(() => (role === "ADMIN" ? "/admin" : "/client"), [role]);
@@ -19,6 +19,7 @@ function AppInner(){
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<ProtectedRoute allow={["ADMIN"]}><Admin /></ProtectedRoute>} />
             <Route path="/client" element={<ProtectedRoute allow={["USER"]}><Client /></ProtectedRoute>} />
             <Route
