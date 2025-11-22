@@ -1,99 +1,351 @@
-# Energy Management System (EMS)
+# ⚡ Energy Management System (EMS)
 
-Acest proiect este un sistem de management al energiei (EMS) construit pe o arhitectură de microservicii. Include un frontend de React și servicii de backend separate pentru autentificare, gestionarea utilizatorilor și gestionarea dispozitivelor, toate containerizate folosind Docker și orchestrate printr-un gateway Traefik.
+A distributed microservices-based platform for monitoring and managing energy consumption across smart devices. Built with Spring Boot, React, and orchestrated with Docker.
 
-Features
+![Architecture](https://img.shields.io/badge/Architecture-Microservices-blue)
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-green)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-Autentificare bazată pe roluri: Sistemul suportă rolurile ADMIN și USER, cu rute protejate în funcție de rol.
+## 📋 Table of Contents
 
-Gateway API cu Traefik: Un singur punct de intrare (http://localhost:81) care direcționează cererile către serviciul corespunzător.
+- [Overview](#-overview)
+- [Architecture](#-architecture)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [Service Details](#-service-details)
+- [API Documentation](#-api-documentation)
+- [Message Queue Events](#-message-queue-events)
+- [Project Structure](#-project-structure)
+- [Configuration](#-configuration)
+- [Development](#-development)
 
-Forward Authentication: Rutele de backend sunt securizate folosind ForwardAuth prin AuthenticationService.
+## 🎯 Overview
 
-Panou de Administrare (ADMIN):
+The Energy Management System provides a comprehensive solution for:
+- **User Management**: Role-based access control (Admin/User)
+- **Device Management**: Register and assign smart devices to users
+- **Real-time Monitoring**: Track energy consumption via message queues
+- **Analytics**: Visualize hourly consumption statistics with interactive charts
 
-Gestionare Utilizatori: CRUD complet pentru utilizatori. Datele sunt combinate din AuthenticationService (username, rol) și UserService (profil: nume, email, adresă).
+## 🏗 Architecture
 
-Gestionare Dispozitive: CRUD complet pentru dispozitive. Administratorii pot vizualiza toate dispozitivele și le pot asocia utilizatorilor existenți după ID.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Traefik Gateway (:81)                        │
+│                    (Routing + Forward Authentication)                │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+        ┌───────────────────────────┼───────────────────────────┐
+        │                           │                           │
+        ▼                           ▼                           ▼
+┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+│   Frontend    │         │     Auth      │         │    User       │
+│    (React)    │         │   Service     │         │   Service     │
+│    :80        │         │    :8083      │         │    :8081      │
+└───────────────┘         └───────┬───────┘         └───────┬───────┘
+                                  │                         │
+                                  │    ┌────────────────────┤
+                                  │    │                    │
+                                  ▼    ▼                    ▼
+                          ┌─────────────────┐       ┌───────────────┐
+                          │    RabbitMQ     │       │    Device     │
+                          │  (CloudAMQP)    │       │   Service     │
+                          │                 │       │    :8082      │
+                          └────────┬────────┘       └───────┬───────┘
+                                   │                        │
+                                   ▼                        │
+                          ┌───────────────┐                 │
+                          │  Monitoring   │◄────────────────┘
+                          │   Service     │
+                          │    :8084      │
+                          └───────────────┘
+```
 
-Panou Client (USER):
+### Data Flow
 
-Vizualizarea propriilor dispozitive alocate.
+1. **User Registration**: AuthService → RabbitMQ → UserService & DeviceService
+2. **Device Creation**: DeviceService → RabbitMQ → MonitoringService
+3. **Consumption Data**: Python Simulator → RabbitMQ → MonitoringService
 
-Arhitectură și Tehnologii
+## ✨ Features
 
-Proiectul este împărțit în servicii distincte, fiecare rulând în propriul container Docker.
+### Admin Dashboard
+- ✅ Full CRUD operations for users
+- ✅ Full CRUD operations for devices
+- ✅ Assign devices to any user
+- ✅ View all system devices and users
+- ✅ Access consumption statistics for any device
 
-Serviciu: frontend, Tehnologie: React, TypeScript, Vite, Port Intern: 80 (Nginx), Scop: Interfața cu utilizatorul (UI) Serviciu: traefik, Tehnologie: Traefik v3, Port Intern: 80, Scop: API Gateway și Reverse Proxy. Expus pe portul 81. Serviciu: authenticationservice, Tehnologie: Spring Boot, Java 21, Port Intern: 8083, Scop: Gestionare login, register, JWT și politici de acces. Serviciu: userservice, Tehnologie: Spring Boot, Java 21, Port Intern: 8081, Scop: Stocarea datelor de profil ale utilizatorilor (nume, adresă, email). Serviciu: deviceservice, Tehnologie: Spring Boot, Java 21, Port Intern: 8082, Scop: Stocarea dispozitivelor și maparea acestora către ID-urile utilizatorilor. Serviciu: db_authentication, Tehnologie: PostgreSQL, Port Intern: 5432, Scop: Baza de date pentru AuthenticationService. Serviciu: db_user, Tehnologie: PostgreSQL, Port Intern: 5432, Scop: Baza de date pentru UserService. Serviciu: db_device, Tehnologie: PostgreSQL, Port Intern: 5432, Scop: Baza de date pentru DeviceService.
+### User Dashboard
+- ✅ View assigned devices
+- ✅ Access personal device statistics
+- ✅ Hourly consumption charts
+- ✅ Historical data visualization
 
-Rularea Proiectului
+### Security
+- 🔐 JWT-based authentication
+- 🔐 Role-based access control (RBAC)
+- 🔐 Forward authentication via Traefik
+- 🔐 Policy-based route protection
 
-Cerințe preliminare
+## 🛠 Tech Stack
 
-Docker Desktop (sau Docker Engine)
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 19, TypeScript, Vite, React Router |
+| **Backend** | Java 21, Spring Boot 3.5, Spring Security, Spring Data JPA |
+| **Database** | PostgreSQL (4 instances) |
+| **Message Broker** | RabbitMQ (CloudAMQP) |
+| **API Gateway** | Traefik v3 |
+| **Containerization** | Docker, Docker Compose |
+| **Build Tools** | Maven 3.9, npm |
 
-Docker Compose
+## 📦 Prerequisites
 
-Clonarea Repozitoriului
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (or Docker Engine + Compose)
+- [Git](https://git-scm.com/)
+- (Optional) [Python 3.x](https://www.python.org/) - for the data simulator
 
-git clone <URL-ul-repozitoriului-tau> cd energy-management-system/energy-management-system-development
+## 🚀 Quick Start
 
-Crearea Rețelei Docker
+### 1. Clone the Repository
 
-Serviciile comunică printr-o rețea Docker externă. Trebuie să o creați manual înainte de a porni.
+```bash
+git clone <repository-url>
+cd energy-management-system
+```
 
-docker network create tema1_net (Acest nume este specificat în docker-compose.yml ca external: true)
+### 2. Create Docker Network
 
-Pornirea Sistemului
+```bash
+docker network create tema1_net
+```
 
-Folosiți Docker Compose pentru a construi imaginile și a porni toate containerele.
+### 3. Start All Services
 
+```bash
 docker-compose up --build
+```
 
-Accesarea Aplicației
+### 4. Access the Application
 
-După ce toate serviciile au pornit, aplicația este gata de utilizare:
+| Service | URL |
+|---------|-----|
+| **Frontend** | http://localhost:81 |
+| **Traefik Dashboard** | http://localhost:8081 |
+| **Auth Service (direct)** | http://localhost:8093 |
+| **User Service (direct)** | http://localhost:8091 |
+| **Device Service (direct)** | http://localhost:8092 |
+| **Monitoring Service (direct)** | http://localhost:8094 |
 
-Aplicația Frontend:
+### 5. Default Credentials
 
-Accesați: http://localhost:81
-
-(Frontend-ul React va fi servit de Traefik, iar acesta va face apeluri API tot către http://localhost:81/api/...)
-
-Autentificare:
-
-Sistemul pornește cu un utilizator admin implicit.
-
+```
 Username: admin
-
 Password: admin
+Role: ADMIN
+```
 
-(Aceste date sunt inițializate în AuthenticationService/src/main/java/com/example/authenticationservice/entity/DataInit.java)
+## 📡 Service Details
 
-Dashboard Traefik (Opțional):
+### Authentication Service (Port 8083)
 
-Pentru a monitoriza rutele și serviciile, accesați dashboard-ul Traefik:
+Handles user authentication, JWT token management, and authorization policies.
 
-http://localhost:8081
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/auth/register` | POST | Register new user | Public |
+| `/api/auth/login` | POST | Authenticate user | Public |
+| `/api/auth/register-admin` | POST | Create user (admin) | Admin |
+| `/api/auth` | GET | List all users | Admin |
+| `/api/auth/{id}` | DELETE | Delete user | Admin |
+| `/validate` | * | Forward auth endpoint | Internal |
 
-Oprirea Sistemului
+### User Service (Port 8081)
 
-Pentru a opri toate containerele, rulați:
+Manages user profile information (synced via RabbitMQ).
 
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/users` | GET | List all user profiles | Admin |
+| `/api/users` | POST | Create user profile | Admin |
+| `/api/users/{id}` | PUT | Update user profile | Admin |
+| `/api/users/{id}` | DELETE | Delete user profile | Admin |
+
+### Device Service (Port 8082)
+
+Manages smart devices and their assignments.
+
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/devices` | GET | List all devices | Admin |
+| `/api/devices` | POST | Create new device | Admin |
+| `/api/devices/{id}` | GET | Get user's devices | User/Admin |
+| `/api/devices/{id}` | PUT | Update device | Admin |
+| `/api/devices/{id}` | DELETE | Delete device | Admin |
+
+### Monitoring Service (Port 8084)
+
+Processes and stores consumption data from devices.
+
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/monitoring` | GET | Get consumption stats | User/Admin |
+| `/api/monitoring/device` | POST | Register device | Admin |
+| `/api/monitoring/device/{id}` | DELETE | Remove device | Admin |
+
+**Query Parameters for GET `/api/monitoring`:**
+- `deviceId` (required): Device ID
+- `day` (required): Date in `YYYY-MM-DD` format
+
+## 📨 Message Queue Events
+
+The system uses RabbitMQ with a topic exchange (`energy_sync_exchange`) for inter-service communication.
+
+| Routing Key | Publisher | Subscribers | Payload |
+|-------------|-----------|-------------|---------|
+| `user.insert` | AuthService | UserService, DeviceService | `{id, firstName, lastName, email, address}` |
+| `user.delete` | AuthService | UserService, DeviceService | `{id}` |
+| `device.insert` | DeviceService | MonitoringService | `{id}` |
+| `device.delete` | DeviceService | MonitoringService | `{id}` |
+
+### Device Measurements Queue
+
+The `device_measurements` queue receives consumption data:
+
+```json
+{
+  "timestamp": "2024-01-15T14:30:00",
+  "device": { "id": 1 },
+  "consumption": 0.15
+}
+```
+
+## 📁 Project Structure
+
+```
+energy-management-system/
+├── AuthenticationService/     # JWT auth & policy management
+│   └── src/main/java/...
+├── UserService/               # User profile management
+│   └── src/main/java/...
+├── DeviceService/             # Device CRUD operations
+│   └── src/main/java/...
+├── MonitoringDevice/          # Consumption data processing
+│   └── src/main/java/...
+├── ems-frontend/              # React TypeScript frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/           # Auth context
+│   │   ├── pages/             # Dashboard, Statistics, etc.
+│   │   ├── lib/               # API client, JWT utils
+│   │   └── types/             # TypeScript definitions
+│   └── Dockerfile
+├── DeviceDataSimulator/       # Python consumption simulator
+│   └── script.py
+├── dynamic/
+│   └── path.yml               # Traefik routing config
+├── docker-compose.yml
+├── traefik.yml
+└── README.md
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Each service supports the following environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DB_IP` | localhost | Database host |
+| `DB_PORT` | 5432 | Database port |
+| `DB_USER` | postgres | Database username |
+| `DB_PASSWORD` | root | Database password |
+| `DB_DBNAME` | varies | Database name |
+| `PORT` | varies | Service port |
+
+### Frontend Configuration
+
+Create `.env` file in `ems-frontend/`:
+
+```env
+VITE_API_BASE=http://localhost:81
+```
+
+## 🔧 Development
+
+### Running Services Locally
+
+Each service can be run independently for development:
+
+```bash
+# Backend services (requires local PostgreSQL)
+cd AuthenticationService
+./mvnw spring-boot:run
+
+# Frontend
+cd ems-frontend
+npm install
+npm run dev
+```
+
+### Running the Data Simulator
+
+```bash
+cd DeviceDataSimulator
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install pika
+python script.py
+```
+
+The simulator will prompt for:
+- Date (YYYY-MM-DD format)
+- Device ID
+
+It generates realistic consumption patterns based on time of day.
+
+### Stopping the System
+
+```bash
 docker-compose down
 
-Structura Proiectului
+# To also remove volumes (databases):
+docker-compose down -v
+```
 
-. ├── AuthenticationService/ # Serviciu Spring Boot (JWT, Login, User Auth) ├── DeviceService/ # Serviciu Spring Boot (CRUD Dispozitive) ├── UserService/ # Serviciu Spring Boot (CRUD Profiluri User) ├── ems-frontend/ # Aplicația React (UI) │ ├── Dockerfile # Dockerfile pentru Nginx + React build │ └── nginx.conf # Configurație Nginx pentru React Router ├── dynamic/ │ └── path.yml # Configurația dinamică Traefik (Rutele API) ├── logs/ │ └── access.log # Log-urile de acces Traefik ├── docker-compose.yml # Fișierul principal de orchestrare └── traefik.yml # Configurația statică Traefik
+## 🔒 Security Notes
 
-Rutare API (Traefik)
+- JWT tokens expire after 24 hours
+- Passwords are hashed with BCrypt
+- All protected routes require valid JWT in `app-auth` header
+- Forward authentication validates every request through AuthService
 
-Toate cererile sunt gestionate de Traefik pe http://localhost:81.
+## 📝 API Testing
 
-http://localhost:81/api/auth/** → authenticationservice:8083
+Swagger UI is available for each service:
+- Auth: http://localhost:8093/swagger-ui.html
+- User: http://localhost:8091/swagger-ui.html
+- Device: http://localhost:8092/swagger-ui.html
+- Monitoring: http://localhost:8094/swagger-ui.html
 
-http://localhost:81/api/users/** → userservice:8081
+## 🤝 Contributing
 
-http://localhost:81/api/devices/** → deviceservice:8082
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-http://localhost:81/ (orice altă cale) → frontend:80 (Aplicația React)
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+**Built with ❤️ for energy-conscious applications**
